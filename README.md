@@ -31,7 +31,7 @@ cd yourrepository
         <h2>License</h2>
         <p>This project is licensed under the MIT License - see the <a href="#">LICENSE</a> file for details.</p>
         <footer>
-            <p>Created with ❤️ by Your Name</p>
+            <p>Created with ❤️ by CodeWebWeaver</p>
         </footer>
     </div>
 </body>
