@@ -1,5 +1,6 @@
 package org.example;
 
+import io.github.cdimascio.dotenv.Dotenv;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.groupadministration.GetChatAdministrators;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -18,9 +19,12 @@ public class DakaNekaBot extends TelegramLongPollingBot {
     private static final String FORTUNE_RESPONSE_PATH = DATABASE_IMITATION_FOLDER_NAME + File.separator  + "fortuneResponses.csv";
     // Private data
     private static final String USERNAMES_CSV = "C:/Users/Alex/Documents/usernames.csv";
+    private static String BOT_TOKEN;
 
     private final Random random = new Random();
+    Dotenv dotenv = Dotenv.configure().load();
     public DakaNekaBot() {
+        BOT_TOKEN = dotenv.get("BOT_TOKEN");
         usernames = new HashSet<>(CSVFileWorker.readLines(USERNAMES_CSV));
         quotes = CSVFileWorker.readLines(QOTES_PATH);
         fortuneResponses = CSVFileWorker.readLines(FORTUNE_RESPONSE_PATH);
@@ -29,14 +33,14 @@ public class DakaNekaBot extends TelegramLongPollingBot {
     }
 
     private void initializeActions() {
-        actions.add(new ActionInfo("Дакалка удали @<username>", "Удаляет пользователя из списка"));
-        actions.add(new ActionInfo("Дакалка добавь @<username>", "Добавляет пользователя в список"));
-        actions.add(new ActionInfo("Дакалка запомни @<username>", "Добавляет пользователя в список"));
-        actions.add(new ActionInfo("Дакалка кого ты...", "Выводит список запомненных пользователей"));
+        actions.add(new ActionInfo("Дакалка удали @<username>", "Удаляет пользователя из списка подписчиков"));
+        actions.add(new ActionInfo("Дакалка добавь @<username>", "Добавляет пользователя в список подписчиков"));
+        actions.add(new ActionInfo("Дакалка запомни @<username>", "Добавляет пользователя в список подписчиков"));
+        actions.add(new ActionInfo("Дакалка кого ты...", "Выводит список запомненных подписчиков"));
         actions.add(new ActionInfo("Дакалка как...", "Выводит список на что откликается"));
         actions.add(new ActionInfo("Дакалка <вопрос>?", "Отвечает на вопрос абсолютно точно"));
         actions.add(new ActionInfo("Да или нет", "Поддакивает или неожидано протестует"));
-        actions.add(new ActionInfo("Дакалка фразочку", "Выдает базу"));
+        actions.add(new ActionInfo("Дакалка фразочку", "Выдает базу)"));
     }
 
     private String chatId;
@@ -187,7 +191,7 @@ public class DakaNekaBot extends TelegramLongPollingBot {
 
         if (CSVFileWorker.removeAll(USERNAMES_CSV)) {
             usernames.clear();
-            sendMessage("Удачно удалил!");
+            sendMessage("Удачно удалил всех подписчиков!");
         } else {
             sendMessage("Что-то пошло не так, зовите админа!!");
         }
@@ -202,7 +206,7 @@ public class DakaNekaBot extends TelegramLongPollingBot {
 
         if (usernames.remove(usernameToDelete)) {
             if (CSVFileWorker.removeLine(USERNAMES_CSV, usernameToDelete)) {
-                sendMessage("Удачно удалил!");
+                sendMessage("Удачно своего подписчика!");
             } else {
                 sendMessage("Что-то пошло не так, зовите админа!!");
             }
@@ -221,9 +225,9 @@ public class DakaNekaBot extends TelegramLongPollingBot {
         } else {
             if (CSVFileWorker.writeLine(USERNAMES_CSV, usernameToSave)) {
                 usernames.add(usernameToSave);
-                sendMessage("Удачно сохранил!");
+                sendMessage("Удачно сохранил подписчика! \n Цьом его в пупок");
             } else {
-                sendMessage("Что-то пошло не так!");
+                sendMessage("Что-то пошло не так, зовите админа!!");
             }
         }
     }
@@ -267,7 +271,7 @@ public class DakaNekaBot extends TelegramLongPollingBot {
         List<ChatMember> administrators = null;
         try {
             GetChatAdministrators getChatAdministrators = new GetChatAdministrators();
-            getChatAdministrators.setChatId(chatId); // Замініть на власний ідентифікатор чату
+            getChatAdministrators.setChatId(chatId);
             administrators = execute(getChatAdministrators);
         } catch (TelegramApiException e) {
             e.printStackTrace();
@@ -284,6 +288,6 @@ public class DakaNekaBot extends TelegramLongPollingBot {
     @Override
     public String getBotToken() {
         // Токен вашего бота
-        return "7166103349:AAFzfso5EEjrwBxR7_No9b7rn0vBjKTaq1A";
+        return BOT_TOKEN;
     }
 }
