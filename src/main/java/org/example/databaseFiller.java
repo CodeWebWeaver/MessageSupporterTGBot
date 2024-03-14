@@ -2,10 +2,9 @@ package org.example;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-import static org.example.CSVFileWorker.createNewFileAtFolder;
+import static org.example.FileUtil.createNewFileAtFolder;
 
 public class databaseFiller {
 
@@ -132,8 +131,8 @@ public class databaseFiller {
         String filename = "quotes.csv";
         createNewFileAtFolder("database", filename);
         String path = "database" + File.separator + filename;
-        CSVFileWorker.writeLines(path, dataToSave);
+        FileUtil.writeLines(path, dataToSave);
 
-        List<String> strings = CSVFileWorker.readLines(path);
+        List<String> strings = FileUtil.readLines(path);
     }
 }

@@ -25,9 +25,9 @@ public class DakaNekaBot extends TelegramLongPollingBot {
     Dotenv dotenv = Dotenv.configure().load();
     public DakaNekaBot() {
         BOT_TOKEN = dotenv.get("BOT_TOKEN");
-        usernames = new HashSet<>(CSVFileWorker.readLines(USERNAMES_CSV));
-        quotes = CSVFileWorker.readLines(QOTES_PATH);
-        fortuneResponses = CSVFileWorker.readLines(FORTUNE_RESPONSE_PATH);
+        usernames = new HashSet<>(FileUtil.readLines(USERNAMES_CSV));
+        quotes = FileUtil.readLines(QOTES_PATH);
+        fortuneResponses = FileUtil.readLines(FORTUNE_RESPONSE_PATH);
 
         initializeActions();
     }
@@ -189,7 +189,7 @@ public class DakaNekaBot extends TelegramLongPollingBot {
 
     private void handleUsernamesClearCommand() {
 
-        if (CSVFileWorker.removeAll(USERNAMES_CSV)) {
+        if (FileUtil.removeAll(USERNAMES_CSV)) {
             usernames.clear();
             sendMessage("Удачно удалил всех подписчиков!");
         } else {
@@ -205,7 +205,7 @@ public class DakaNekaBot extends TelegramLongPollingBot {
         }
 
         if (usernames.remove(usernameToDelete)) {
-            if (CSVFileWorker.removeLine(USERNAMES_CSV, usernameToDelete)) {
+            if (FileUtil.removeLine(USERNAMES_CSV, usernameToDelete)) {
                 sendMessage("Удачно своего подписчика!");
             } else {
                 sendMessage("Что-то пошло не так, зовите админа!!");
@@ -216,14 +216,14 @@ public class DakaNekaBot extends TelegramLongPollingBot {
     }
 
     private void handleUsernameAddition(String usernameToSave) {
-        boolean userAlreadyPresent = CSVFileWorker.containsLine(USERNAMES_CSV, usernameToSave);
+        boolean userAlreadyPresent = FileUtil.containsLine(USERNAMES_CSV, usernameToSave);
 
         if (usernameToSave.isEmpty()) {
             sendMessage("Неверный юзернейм!");
         } else if (userAlreadyPresent) {
             sendMessage("Такой уже есть \uD83D\uDE0A!");
         } else {
-            if (CSVFileWorker.writeLine(USERNAMES_CSV, usernameToSave)) {
+            if (FileUtil.writeLine(USERNAMES_CSV, usernameToSave)) {
                 usernames.add(usernameToSave);
                 sendMessage("Удачно сохранил подписчика! \n Цьом его в пупок");
             } else {
