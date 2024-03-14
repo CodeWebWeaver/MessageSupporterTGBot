@@ -2,9 +2,7 @@ package org.example;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
-import org.telegram.telegrambots.meta.api.methods.groupadministration.GetChatAdministrators;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.ChatMember;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -15,7 +13,7 @@ import java.util.*;
 public class DakaNekaBot extends TelegramLongPollingBot {
 
     private static final String DATABASE_IMITATION_FOLDER_NAME = "database";
-    private static final String QOTES_PATH = DATABASE_IMITATION_FOLDER_NAME + File.separator  + "quotes.csv";
+    private static final String QUOTES_PATH = DATABASE_IMITATION_FOLDER_NAME + File.separator  + "quotes.csv";
     private static final String FORTUNE_RESPONSE_PATH = DATABASE_IMITATION_FOLDER_NAME + File.separator  + "fortuneResponses.csv";
     // Private data
     private static final String USERNAMES_CSV = "C:/Users/Alex/Documents/usernames.csv";
@@ -26,7 +24,7 @@ public class DakaNekaBot extends TelegramLongPollingBot {
     public DakaNekaBot() {
         BOT_TOKEN = dotenv.get("BOT_TOKEN");
         usernames = new HashSet<>(FileUtil.readLines(USERNAMES_CSV));
-        quotes = FileUtil.readLines(QOTES_PATH);
+        quotes = FileUtil.readLines(QUOTES_PATH);
         fortuneResponses = FileUtil.readLines(FORTUNE_RESPONSE_PATH);
 
         initializeActions();
@@ -49,7 +47,6 @@ public class DakaNekaBot extends TelegramLongPollingBot {
     private final List<String> fortuneResponses;
     private final List<String> quotes;
     private final Set<String> usernames;
-    private String currentUsername;
 
     private boolean isSilent = false;
     //private int silentCounter = 0;
@@ -60,7 +57,7 @@ public class DakaNekaBot extends TelegramLongPollingBot {
         // Обработка полученного обновления
         chatId = update.getMessage().getChatId().toString();
 
-        currentUsername = update.getMessage().getFrom().getUserName();
+        String currentUsername = update.getMessage().getFrom().getUserName();
         String messageText = update.getMessage().getText();
 
         if (messageText == null || isSilent()) return;
@@ -86,7 +83,7 @@ public class DakaNekaBot extends TelegramLongPollingBot {
 
             if (receivedCommand.contains("да?") && currentUsername.equals("Shantazh69") || currentUsername.equals("Helubimaya")) {
                 String[] response = {"Да-да, госпожа\uD83D\uDE18",
-                        "Дяяяяя, госпожа!❤\uFE0F",
+                        "Дяяяяя, госпожа!❤️",
                         "Дя, госпожа!",
                         "Нет, госпожа \uD83E\uDD14",
                         "Нет-Нет, госпожа\uD83D\uDE43",
@@ -95,7 +92,7 @@ public class DakaNekaBot extends TelegramLongPollingBot {
                 return;
             }
 
-            String[] response = {"Да-да\uD83D\uDE18", "Дяяяяя!❤\uFE0F",
+            String[] response = {"Да-да\uD83D\uDE18", "Дяяяяя!❤️",
                     "Дя!", "Да!", "Нет \uD83E\uDD14", "Нет-Нет\uD83D\uDE43",
                     "Нет!\uD83D\uDE07"};
             sendMessage(response[random.nextInt(response.length)]);
@@ -206,7 +203,7 @@ public class DakaNekaBot extends TelegramLongPollingBot {
 
         if (usernames.remove(usernameToDelete)) {
             if (FileUtil.removeLine(USERNAMES_CSV, usernameToDelete)) {
-                sendMessage("Удачно своего подписчика!");
+                sendMessage("Удачно удалил своего подписчика!");
             } else {
                 sendMessage("Что-то пошло не так, зовите админа!!");
             }
@@ -267,17 +264,17 @@ public class DakaNekaBot extends TelegramLongPollingBot {
         }
     }
 
-    private List<ChatMember> getChatAdministrators() {
+    /*private List<ChatMember> getChatAdministrators() {
         List<ChatMember> administrators = null;
         try {
             GetChatAdministrators getChatAdministrators = new GetChatAdministrators();
             getChatAdministrators.setChatId(chatId);
             administrators = execute(getChatAdministrators);
         } catch (TelegramApiException e) {
-            e.printStackTrace();
+            System.out.println("Error during gathering admins");
         }
         return administrators;
-    }
+    }*/
 
     @Override
     public String getBotUsername() {

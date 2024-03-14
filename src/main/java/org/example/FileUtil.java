@@ -14,7 +14,6 @@ public class FileUtil {
             }
         } catch (IOException exception) {
             System.out.println("Cant read from : " + filePath);
-            exception.printStackTrace();
         }
         return lines;
     }
@@ -26,7 +25,6 @@ public class FileUtil {
             }
             return true;
         } catch (IOException exception) {
-            exception.printStackTrace();
             System.out.println("Cant write to : " + filePath);
             return false;
         }
@@ -41,7 +39,6 @@ public class FileUtil {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
             System.out.println("Can't check for line in file: " + filePath);
         }
         return false;
@@ -52,18 +49,16 @@ public class FileUtil {
             writer.append(line).append("\n");
             return true;
         } catch (IOException exception) {
-            exception.printStackTrace();
             System.out.println("Cant append line at: " + filePath);
             return false;
         }
     }
 
     public static boolean removeAll(String filePath) {
-        try (FileWriter writer = new FileWriter(filePath)) {
+        try (FileWriter ignored = new FileWriter(filePath)) {
             // Не записываем никаких данных, файл будет перезаписан пустым содержимым
             return true;
         } catch (IOException exception) {
-            exception.printStackTrace();
             System.out.println("Cant delete all at : " + filePath);
             return false;
         }
@@ -85,15 +80,13 @@ public class FileUtil {
         } catch (IOException exception) {
             System.out.println("Cant remove from : " + filePath + "\n"
                     + "Trying to remove:" + lineToRemove);
-            exception.printStackTrace();
             return false;
         }
 
         if (lineFound) {
-            writeLines(filePath, lines);
-            return true;
+            return writeLines(filePath, lines);
         } else {
-            return false;
+            return lineFound;
         }
     }
 
