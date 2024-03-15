@@ -34,7 +34,9 @@ public class DakaNekaBot extends TelegramLongPollingBot {
         actions.add(new DataActionInfo("Дакалка удали @<username>",
                 "Удаляет пользователя из списка подписчиков",
                 List.of("^Дакалка удали @\\S+$",
-                        "^Дакалка удали @.*"),
+                        "^Дакалка удали @.*",
+                        "^Дакалка забудь @.*",
+                "^Дакалка выкинь @.*"),
                 DataAction.REMOVE
         ));
         actions.add(new DataActionInfo("Дакалка добавь/запомни @<username>",
@@ -81,7 +83,9 @@ public class DakaNekaBot extends TelegramLongPollingBot {
         actions.add(new CommunicationActionInfo("Дакалка фразочку",
                 "Выдает базу)",
                 List.of("^Дакалка фразочку.*",
-                        "^Дакалка фраз.*"),
+                        "^Дакалка фраз.*",
+                        "^Дакалка выдай базу.*",
+                        "^Дакалка базу.*"),
                 CommunicationAction.QUOTE
         ));
 
@@ -98,6 +102,22 @@ public class DakaNekaBot extends TelegramLongPollingBot {
                         "(?i).*\\b(Молодец|Красав.*)\\b.*"),
                 CommunicationAction.APPRECIATION_RESPONSE
         ));
+
+        actions.add(new DataActionInfo("Дакалка припоминай доминаторшу",
+                "Запоминает доминаторшу",
+                List.of("^Дакалка припоминай доминаторшу @.*",
+                        "^Дакалка добавь доминаторшу @.*",
+                        "^Дакалка запомни доминаторшу @.*"),
+                DataAction.ADD_DOMINANT_FEMALE));
+        actions.add(new DataActionInfo("Дакалка забудь доминаторшу",
+                "Забывет доминаторшу",
+                List.of("^Дакалка удали доминаторшу @.*",
+                "^Дакалка забудь доминаторшу @.*"),
+                DataAction.REMOVE_DOMINANT_FEMALES));
+        actions.add(new DataActionInfo("Дакалка покажи доминаторш",
+                "Выводит доминаторш",
+                List.of("^Дакалка покажи доминаторш.*"),
+                DataAction.GET_ALL_DOMINANT_FEMALES));
     }
 
     private String chatId;

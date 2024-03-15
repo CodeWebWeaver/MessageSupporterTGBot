@@ -9,7 +9,6 @@ import org.dakanaka.service.DataServiceImpl;
 import org.telegram.telegrambots.meta.api.objects.Message;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -17,7 +16,6 @@ public class CommunicationMessageHandler implements MessageHandler {
     private final DataService dataService;
     private final DakaNekaBot bot;
     private final String currentUsername;
-    private List<String> dominantFemales;
     private final Random random = new Random();
     private final List<ActionInfo> actions;
     private final List<String> fortuneResponses;
@@ -25,15 +23,21 @@ public class CommunicationMessageHandler implements MessageHandler {
     private static final String DATABASE_IMITATION_FOLDER_NAME = "database";
     private static final String QUOTES_PATH = DATABASE_IMITATION_FOLDER_NAME + File.separator  + "quotes.csv";
     private static final String FORTUNE_RESPONSE_PATH = DATABASE_IMITATION_FOLDER_NAME + File.separator  + "fortuneResponses.csv";
+    /** Private data START**/
+    private static final String USERNAMES_CSV = "C:/Users/Alex/Documents/usernames.csv";
+    private static final String DOMINANT_FEMALES_USERNAMES_CSV = "C:/Users/Alex/Documents/dominant_fem_usernames.csv";
+    /** Private data END**/
     private final String[] loveResponses = {"Да-да\uD83D\uDE18", "Дяяяяя!❤️",
             "Дя!", "Да!"};
     private final String[] yesNoResponses = {"Да-да\uD83D\uDE18", "Дяяяяя!❤️",
             "Дя!", "Да!", "Нет \uD83E\uDD14", "Нет-Нет\uD83D\uDE43",
             "Нет!\uD83D\uDE07"};
-    private final String[] slaveResponses = {"Да-да, госпожа\uD83D\uDE18",
+    private final String[] slaveResponses = {
+            "Да-да, моя госпожа\uD83D\uDE18",
             "Дяяяяя, госпожа!❤️",
+            "Да, моя госпожа!",
             "Дя, госпожа!",
-            "Нет, госпожа \uD83E\uDD14",
+            "Нет, моя госпожа \uD83E\uDD14",
             "Нет-Нет, госпожа\uD83D\uDE43",
             "Нет, госпожа!\uD83D\uDE07"};
     private final String[] appreciateResponses = {"Спасибо за похвалу! Это приятно слышать!\uD83D\uDE18",
@@ -45,7 +49,6 @@ public class CommunicationMessageHandler implements MessageHandler {
         this.actions = actions;
         this.bot = bot;
         this.currentUsername = currentUsername;
-        dominantFemales = new ArrayList<>();
         quotes = dataService.getAllData(QUOTES_PATH);
         fortuneResponses = dataService.getAllData(FORTUNE_RESPONSE_PATH);
     }
@@ -62,9 +65,9 @@ public class CommunicationMessageHandler implements MessageHandler {
                 handleDakalkaInfoCommand();
                 break;
             case YES_NO:
-                if (dominantFemales.stream().anyMatch(i -> i.equals(currentUsername))) {
+                if (dataService.getAllData(DOMINANT_FEMALES_USERNAMES_CSV).stream().anyMatch(i -> i.equals(currentUsername))) {
                     sendRandomResponse(slaveResponses);
-                } else {
+                } else if (dataService.getAllData(USERNAMES_CSV).stream().anyMatch(i -> i.equals(currentUsername))){
                     sendRandomResponse(yesNoResponses);
                 }
                 break;

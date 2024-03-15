@@ -41,11 +41,20 @@ public class DataMessageHandlerImpl implements MessageHandler {
             case ADD :
                 handleDataAddition(USERNAMES_CSV, usernameInMessage);
                 break;
+            case ADD_DOMINANT_FEMALE :
+                handleDataAddition(DOMINANT_FEMALES_USERNAMES_CSV, usernameInMessage);
+                break;
             case GET_ALL:
                 handleGetAllDataCommand(USERNAMES_CSV);
                 break;
+            case GET_ALL_DOMINANT_FEMALES:
+                handleGetAllDataCommand(DOMINANT_FEMALES_USERNAMES_CSV);
+                break;
             case REMOVE:
                 handleDataDelete(USERNAMES_CSV, usernameInMessage);
+                break;
+            case REMOVE_DOMINANT_FEMALES:
+                handleDataDelete(DOMINANT_FEMALES_USERNAMES_CSV, usernameInMessage);
                 break;
             case REMOVE_ALL:
                 handleDataClearCommand(USERNAMES_CSV);
@@ -72,7 +81,7 @@ public class DataMessageHandlerImpl implements MessageHandler {
             bot.sendMessage("Такой уже есть \uD83D\uDE0A!");
         } else {
             if (dataService.saveData(path, usernameToSave)) {
-                bot.sendMessage("Удачно сохранил подписчика! \n Цьом его в пупок");
+                bot.sendMessage("Удачно сохранил! \n Будем знакомы ❤️");
             } else {
                 bot.sendMessage("Что-то пошло не так, зовите админа!!");
             }
@@ -85,7 +94,7 @@ public class DataMessageHandlerImpl implements MessageHandler {
 
         if (dataService.containsData(path, usernameToDelete)) {
             if (dataService.deleteData(path, usernameToDelete)) {
-                bot.sendMessage("Удачно удалил своего подписчика!");
+                bot.sendMessage("Удачно удалил из списка!");
             } else {
                 bot.sendMessage("Что-то пошло не так, зовите админа!!");
             }
@@ -98,7 +107,7 @@ public class DataMessageHandlerImpl implements MessageHandler {
         if (!isUserHaveRights(currentUser)) return;
 
         if (dataService.deleteAllData(path)) {
-            bot.sendMessage("Удачно удалил всех подписчиков!");
+            bot.sendMessage("Удачно удалил всех из списка!");
         } else {
             bot.sendMessage("Что-то пошло не так, зовите админа!!");
         }
