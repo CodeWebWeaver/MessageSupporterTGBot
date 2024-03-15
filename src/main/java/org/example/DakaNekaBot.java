@@ -2,7 +2,9 @@ package org.example;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.api.methods.groupadministration.GetChatAdministrators;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.ChatMember;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -47,6 +49,7 @@ public class DakaNekaBot extends TelegramLongPollingBot {
     private final List<String> fortuneResponses;
     private final List<String> quotes;
     private final Set<String> usernames;
+    private String currentUsername;
 
     private boolean isSilent = false;
     //private int silentCounter = 0;
@@ -57,7 +60,7 @@ public class DakaNekaBot extends TelegramLongPollingBot {
         // Обработка полученного обновления
         chatId = update.getMessage().getChatId().toString();
 
-        String currentUsername = update.getMessage().getFrom().getUserName();
+        currentUsername = update.getMessage().getFrom().getUserName();
         String messageText = update.getMessage().getText();
 
         if (messageText == null || isSilent()) return;
@@ -137,10 +140,11 @@ public class DakaNekaBot extends TelegramLongPollingBot {
 
     private void handleDakalkaCommand(String receivedCommand) {
 
-//        if (!CSVFileWorker.containsLine(USERNAMES_CSV, currentUsername) && getChatAdministrators() != null && getChatAdministrators().stream().noneMatch(i -> i.getUser().getUserName().equals(currentUsername))) {
-//            sendMessage("Ты не из нашей банды!");
-//            return;
-//        }
+        boolean isAdmin = getChatAdministrators().stream().anyMatch(i -> i.getUser().getUserName() != null && i.getUser().getUserName().equals(currentUsername));
+        if (!FileUtil.containsLine(USERNAMES_CSV, currentUsername) && !isAdmin) {
+            sendMessage("Ты не из нашей банды!");
+            return;
+        }
 
         if (receivedCommand.startsWith("дакалка удали @")) {
             String usernameToDelete = extractUsername(receivedCommand);
@@ -264,7 +268,7 @@ public class DakaNekaBot extends TelegramLongPollingBot {
         }
     }
 
-    /*private List<ChatMember> getChatAdministrators() {
+    private List<ChatMember> getChatAdministrators() {
         List<ChatMember> administrators = null;
         try {
             GetChatAdministrators getChatAdministrators = new GetChatAdministrators();
@@ -274,7 +278,7 @@ public class DakaNekaBot extends TelegramLongPollingBot {
             System.out.println("Error during gathering admins");
         }
         return administrators;
-    }*/
+    }
 
     @Override
     public String getBotUsername() {
