@@ -7,7 +7,7 @@
 <body>
     <div class="container">
         <h1>DakaNekaBot</h1>
-        <p>This is a Telegram bot written in Java using the Telegram Bots API. It responds to various commands and interacts with users.</p>
+        <p>This is a Telegram bot @DakaNekaBot written in Java using the Telegram Bots API. It responds to various commands and interacts with users.</p>
         <h2>Features</h2>
         <ul>
             <li>Handles user commands like adding, removing, and listing usernames</li>
