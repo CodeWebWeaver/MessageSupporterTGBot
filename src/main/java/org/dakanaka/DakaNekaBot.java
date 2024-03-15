@@ -33,12 +33,16 @@ public class DakaNekaBot extends TelegramLongPollingBot {
     private void initializeActions() {
         actions.add(new DataActionInfo("Дакалка удали @<username>",
                 "Удаляет пользователя из списка подписчиков",
-                List.of("^Дакалка удали @\\S+$"),
+                List.of("^Дакалка удали @\\S+$",
+                        "^Дакалка удали @.*"),
                 DataAction.REMOVE
         ));
         actions.add(new DataActionInfo("Дакалка добавь/запомни @<username>",
                 "Добавляет пользователя в список подписчиков",
-                List.of("^Дакалка добавь @\\S+$", "^Дакалка запомни @\\S+$"),
+                List.of("^Дакалка добавь @\\S+$",
+                        "^Дакалка запомни @\\S+$",
+                        "^Дакалка запомни @.*"
+                        ),
                 DataAction.ADD
         ));
         actions.add(new DataActionInfo("Дакалка кого ты...",
@@ -46,10 +50,9 @@ public class DakaNekaBot extends TelegramLongPollingBot {
                 List.of("^Дакалка кого ты.*"),
                 DataAction.GET_ALL
         ));
-
-        actions.add(new CommunicationActionInfo("Дакалка как...",
+        actions.add(new CommunicationActionInfo("Дакалка инфо",
                 "Выводит список на что откликается",
-                List.of("^Дакалка как.*", "^Дакалка инф.*"),
+                List.of("^Дакалка инф.*"),
                 CommunicationAction.INFO
         ));
         actions.add(new CommunicationActionInfo("Дакалка <вопрос>?",
@@ -60,24 +63,39 @@ public class DakaNekaBot extends TelegramLongPollingBot {
         actions.add(new CommunicationActionInfo(
                 "Да или нет",
                 "Поддакивает или неожидано протестует",
-                List.of("^Дакалка .+\\?$"),
+                List.of("\\b[Дд]а\\s*(или)?\\s*[Нн]ет\\?\\b",
+                        "\\bНет\\?\\b",
+                        "\\bДа\\?\\b",
+                        "^Да\\?$",
+                        "^Нет\\?$",
+                        "\\b(?i)Нет\\?\\b",
+                        "\\b(?i)Да\\?\\b",
+                        "(?i)(да|нет)\\?(?!\\.)",
+                        "(?i)(?<=\\W|^)(да\\s+или\\s+нет)\\?(?=\\W|$)",
+                        "\\b(?i)[Дд]а\\s*(или)?\\s*[Нн]ет\\?\\b",
+                        "(?i)^да\\s+или\\s+нет\\?$",
+                        "^(да|нет)\\??(?<!\\.)(?=\\.|\\?|$)|(дяя)(\\.|\\?|$)"),
+
                 CommunicationAction.YES_NO
         ));
         actions.add(new CommunicationActionInfo("Дакалка фразочку",
                 "Выдает базу)",
-                List.of("\\b[Дд]а\\s*(или)?\\s*[Нн]ет\\?\\b", "\\bНет\\?\\b", "\\bДа\\?\\b"),
+                List.of("^Дакалка фразочку.*",
+                        "^Дакалка фраз.*"),
                 CommunicationAction.QUOTE
         ));
 
         actions.add(new CommunicationActionInfo("Любит ли кто-то кого-то",
                 "Расказывает правду",
-                List.of(".*\\b(любит сашу|обожает сашу|обожнює сашу)\\b.*"),
+                List.of(".*\\b(любит сашу|обожает сашу|обожнює сашу)\\b.*",
+                        ".*\\b(любит Сашу|обожает Сашу|обожнює Сашу)\\b.*"),
                 CommunicationAction.YES_NO_LOVE
         ));
 
         actions.add(new CommunicationActionInfo("молодец или красава в ответ",
                 "Отвечает на похвалу",
-                List.of(".*\\b(молодец|красав)\\b.*"),
+                List.of("(?i).*\\b(молодец|красав.*)\\b.*",
+                        "(?i).*\\b(Молодец|Красав.*)\\b.*"),
                 CommunicationAction.APPRECIATION_RESPONSE
         ));
     }
@@ -115,31 +133,20 @@ public class DakaNekaBot extends TelegramLongPollingBot {
         if(anyDataAction.isPresent()) {
             MessageHandler dataMessageHandler = new DataMessageHandlerImpl(admins, currentUsername, this);
             dataMessageHandler.handleCommand(anyDataAction.get(), messageText);
-        }
-
-        Message replyToMessage = update.getMessage().getReplyToMessage();
-        // Communication handler
-        Optional<ActionInfo> anyCommunicationAction = actions.stream()
-                .filter(action -> action.matchesPattern(messageText) && action instanceof CommunicationActionInfo)
-                .findAny();
-        if(anyCommunicationAction.isPresent()) {
-            MessageHandler communicationMessageHandler = new CommunicationMessageHandler(actions, currentUsername, this);
-            if (replyToMessage != null) {
-                communicationMessageHandler.handleCommand(anyCommunicationAction.get(), messageText, replyToMessage);
-            } else {
-                communicationMessageHandler.handleCommand(anyCommunicationAction.get(), messageText);
+        } else  {
+            Message replyToMessage = update.getMessage().getReplyToMessage();
+            // Communication handler
+            Optional<ActionInfo> anyCommunicationAction = actions.stream()
+                    .filter(action -> action.matchesPattern(messageText) && action instanceof CommunicationActionInfo)
+                    .findAny();
+            if(anyCommunicationAction.isPresent()) {
+                MessageHandler communicationMessageHandler = new CommunicationMessageHandler(actions, currentUsername, this);
+                if (replyToMessage != null) {
+                    communicationMessageHandler.handleCommand(anyCommunicationAction.get(), messageText, replyToMessage);
+                } else {
+                    communicationMessageHandler.handleCommand(anyCommunicationAction.get(), messageText);
+                }
             }
-        }
-    }
-
-    public String lowerCaseWithUsername(String messageText) {
-        int atIndex = messageText.indexOf('@');
-        if (atIndex != -1) {
-            String beforeAt = messageText.substring(0, atIndex); // Сохраняем текст до символа '@'
-            String afterAt = messageText.substring(atIndex); // Сохраняем текст после символа '@' без изменений
-            return beforeAt.toLowerCase() + afterAt;
-        } else {
-            return messageText.toLowerCase(); // Если символ '@' не найден, преобразовываем всю строку в нижний регистр
         }
     }
 
@@ -157,6 +164,7 @@ public class DakaNekaBot extends TelegramLongPollingBot {
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(chatId);
         sendMessage.setText(text);
+
         try {
             this.execute(sendMessage);
             messageToSend = null;

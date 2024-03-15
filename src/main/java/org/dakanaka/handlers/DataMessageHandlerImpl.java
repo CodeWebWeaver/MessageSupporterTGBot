@@ -59,7 +59,10 @@ public class DataMessageHandlerImpl implements MessageHandler {
     }
 
     public void handleDataAddition(String path, String usernameToSave) {
-        if (!isUserHaveRights(currentUser)) return;
+        if (!isUserHaveRights(currentUser)) {
+            bot.sendMessage("Прости, но я тебя не знаю");
+            return;
+        }
         if (checkDataEmpty(usernameToSave)) return;
         boolean userAlreadyPresent = dataService.containsData(path, usernameToSave);
 
@@ -118,10 +121,14 @@ public class DataMessageHandlerImpl implements MessageHandler {
     }
 
     public boolean isUserHaveRights(String username) {
-        boolean isAdmin = admins.stream()
-                .anyMatch(i -> i.getUser().getUserName() != null && i.getUser().getUserName().equals(username));
         boolean userInList = dataService.containsData(USERNAMES_CSV, username);
-        return !userInList && !isAdmin;
+        if (admins != null) {
+            boolean isAdmin = admins.stream()
+                    .anyMatch(i -> i.getUser().getUserName() != null && i.getUser().getUserName().equals(username));
+            return userInList || isAdmin;
+        } else {
+            return userInList;
+        }
     }
 
     private boolean checkDataEmpty(String usernameToDelete) {

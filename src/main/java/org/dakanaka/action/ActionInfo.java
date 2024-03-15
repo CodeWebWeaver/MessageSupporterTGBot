@@ -28,11 +28,16 @@ public abstract class ActionInfo {
 
     // Абстрактный метод для проверки подходит ли строка под паттерн действия
     public boolean matchesPattern(String input) {
-        Pattern compile = Pattern.compile(getPatterns().get(0), Pattern.CASE_INSENSITIVE);
-        boolean b = compile.matcher(input).find();
+        /*for (String pattern : patterns) {
+            boolean isPresent = Pattern.compile(pattern).matcher(input).find();
+            if (isPresent) {
+                return isPresent;
+            }
+        }*/
         return patterns.stream()
-                .anyMatch(pattern -> Pattern.compile(pattern, Pattern.CASE_INSENSITIVE)
-                        .matcher(input)
-                        .find());
+                .anyMatch(pattern -> {
+                    Pattern compile = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
+                    return compile.matcher(input).find();
+                });
     }
 }

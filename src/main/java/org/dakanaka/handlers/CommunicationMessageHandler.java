@@ -9,6 +9,7 @@ import org.dakanaka.service.DataServiceImpl;
 import org.telegram.telegrambots.meta.api.objects.Message;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -44,6 +45,7 @@ public class CommunicationMessageHandler implements MessageHandler {
         this.actions = actions;
         this.bot = bot;
         this.currentUsername = currentUsername;
+        dominantFemales = new ArrayList<>();
         quotes = dataService.getAllData(QUOTES_PATH);
         fortuneResponses = dataService.getAllData(FORTUNE_RESPONSE_PATH);
     }
@@ -99,7 +101,10 @@ public class CommunicationMessageHandler implements MessageHandler {
     private void handleDakalkaInfoCommand() {
         StringBuilder builder = new StringBuilder("Я могу выполнить следующие действия:\n\n");
         for (ActionInfo actionInfo : actions) {
-            builder.append(actionInfo.getAction()).append(" - ").append(actionInfo.getDescription()).append("\n");
+            builder.append("\n")
+                    .append(actionInfo.getAction())
+                    .append(" - ").append(actionInfo.getDescription())
+                    .append("\n");
         }
         bot.sendMessage(builder.toString());
     }
