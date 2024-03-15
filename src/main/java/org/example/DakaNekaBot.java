@@ -140,11 +140,15 @@ public class DakaNekaBot extends TelegramLongPollingBot {
 
     private void handleDakalkaCommand(String receivedCommand) {
 
-        boolean isAdmin = getChatAdministrators().stream().anyMatch(i -> i.getUser().getUserName() != null && i.getUser().getUserName().equals(currentUsername));
-        if (!FileUtil.containsLine(USERNAMES_CSV, currentUsername) && !isAdmin) {
-            sendMessage("Ты не из нашей банды!");
+        if (receivedCommand.startsWith("дакалка как")) {
+            handleDakalkaInfoCommand();
+
+        } else if (receivedCommand.startsWith("дакалка кого ты")) {
+            handleGetUsernamesCommand();
             return;
         }
+
+        if (!hasUpdatePermission()) return;
 
         if (receivedCommand.startsWith("дакалка удали @")) {
             String usernameToDelete = extractUsername(receivedCommand);
@@ -156,14 +160,16 @@ public class DakaNekaBot extends TelegramLongPollingBot {
         } else if (receivedCommand.startsWith("дакалка добавь @") || receivedCommand.startsWith("дакалка запомни @")) {
             String usernameToDelete = extractUsername(receivedCommand);
             handleUsernameAddition(usernameToDelete);
-
-        } else if (receivedCommand.startsWith("дакалка кого ты")) {
-            handleGetUsernamesCommand();
-
-        } else if (receivedCommand.startsWith("дакалка как")) {
-            handleDakalkaInfoCommand();
-
         }
+    }
+
+    private boolean hasUpdatePermission() {
+        boolean isAdmin = getChatAdministrators().stream().anyMatch(i -> i.getUser().getUserName() != null && i.getUser().getUserName().equals(currentUsername));
+        if (!FileUtil.containsLine(USERNAMES_CSV, currentUsername) && !isAdmin) {
+            sendMessage("Ты не из нашей банды!");
+            return true;
+        }
+        return false;
     }
 
     private void handleDakalkaInfoCommand() {
