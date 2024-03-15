@@ -107,18 +107,20 @@ public class DakaNekaBot extends TelegramLongPollingBot {
                 CommunicationAction.APPRECIATION_RESPONSE
         ));
 
-        actions.add(new DataActionInfo("Дакалка припоминай доминаторшу",
+        actions.add(new DataActionInfo("Дакалка припоминай доминаторшу @<username>",
                 "Запоминает доминаторшу",
                 List.of("^Дакалка припоминай доминаторшу @.*",
                         "^Дакалка добавь доминаторшу @.*",
                         "^Дакалка запомни доминаторшу @.*"),
                 DataAction.ADD_DOMINANT_FEMALE));
-        actions.add(new DataActionInfo("Дакалка забудь доминаторшу",
+
+        actions.add(new DataActionInfo("Дакалка забудь доминаторшу @<username>",
                 "Забывет доминаторшу",
                 List.of("^Дакалка удали доминаторшу @.*",
                 "^Дакалка забудь доминаторшу @.*"),
                 DataAction.REMOVE_DOMINANT_FEMALES));
-        actions.add(new DataActionInfo("Дакалка покажи доминаторш",
+
+        actions.add(new DataActionInfo("Дакалка покажи доминаторш>",
                 "Выводит доминаторш",
                 List.of("^Дакалка покажи доминаторш.*"),
                 DataAction.GET_ALL_DOMINANT_FEMALES));
