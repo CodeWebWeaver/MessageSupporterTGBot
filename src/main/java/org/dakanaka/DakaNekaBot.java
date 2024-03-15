@@ -1,6 +1,8 @@
-package org.example;
+package org.dakanaka;
 
 import io.github.cdimascio.dotenv.Dotenv;
+import org.dakanaka.service.DataService;
+import org.dakanaka.service.DataServiceImpl;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.groupadministration.GetChatAdministrators;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -19,15 +21,19 @@ public class DakaNekaBot extends TelegramLongPollingBot {
     private static final String FORTUNE_RESPONSE_PATH = DATABASE_IMITATION_FOLDER_NAME + File.separator  + "fortuneResponses.csv";
     // Private data
     private static final String USERNAMES_CSV = "C:/Users/Alex/Documents/usernames.csv";
+    private static final String DOMINANT_FEMALES_USERNAMES_CSV = "C:/Users/Alex/Documents/dominant_fem_usernames.csv";
     private static String BOT_TOKEN;
 
     private final Random random = new Random();
+    private final DataService dataService;
     Dotenv dotenv = Dotenv.configure().load();
     public DakaNekaBot() {
+        dataService = new DataServiceImpl();
+
         BOT_TOKEN = dotenv.get("BOT_TOKEN");
-        usernames = new HashSet<>(FileUtil.readLines(USERNAMES_CSV));
-        quotes = FileUtil.readLines(QUOTES_PATH);
-        fortuneResponses = FileUtil.readLines(FORTUNE_RESPONSE_PATH);
+        usernames = new HashSet<>(dataService.getAllData(USERNAMES_CSV));
+        quotes = dataService.getAllData(QUOTES_PATH);
+        fortuneResponses = dataService.getAllData(FORTUNE_RESPONSE_PATH);
 
         initializeActions();
     }
@@ -144,18 +150,18 @@ public class DakaNekaBot extends TelegramLongPollingBot {
             handleDakalkaInfoCommand();
 
         } else if (receivedCommand.startsWith("дакалка кого ты")) {
-            handleGetUsernamesCommand();
+            handleGetAllDataCommand(USERNAMES_CSV);
             return;
         }
 
-        if (!hasUpdatePermission()) return;
+        //if (!hasUpdatePermission()) return;
 
         if (receivedCommand.startsWith("дакалка удали @")) {
             String usernameToDelete = extractUsername(receivedCommand);
-            handleUsernameDelete(usernameToDelete);
+            handleDataDelete(USERNAMES_CSV, usernameToDelete);
 
         } else if (receivedCommand.contains("дакалка удали всех")) {
-            handleUsernamesClearCommand();
+            handleDataClearCommand(USERNAMES_CSV);
 
         } else if (receivedCommand.startsWith("дакалка добавь @") || receivedCommand.startsWith("дакалка запомни @")) {
             String usernameToDelete = extractUsername(receivedCommand);
@@ -164,8 +170,11 @@ public class DakaNekaBot extends TelegramLongPollingBot {
     }
 
     private boolean hasUpdatePermission() {
-        boolean isAdmin = getChatAdministrators().stream().anyMatch(i -> i.getUser().getUserName() != null && i.getUser().getUserName().equals(currentUsername));
-        if (!FileUtil.containsLine(USERNAMES_CSV, currentUsername) && !isAdmin) {
+        boolean isAdmin = getChatAdministrators().stream()
+                .anyMatch(i -> i.getUser().getUserName() != null && i.getUser().getUserName().equals(currentUsername));
+        boolean userInList = dataService.containsData(USERNAMES_CSV, currentUsername);
+
+        if (!userInList && !isAdmin) {
             sendMessage("Ты не из нашей банды!");
             return true;
         }
@@ -180,23 +189,23 @@ public class DakaNekaBot extends TelegramLongPollingBot {
         sendMessage(builder.toString());
     }
 
-    private void handleGetUsernamesCommand() {
-        if (usernames.isEmpty()) {
+    private void handleGetAllDataCommand(String path) {
+        List<String> line = dataService.getAllData(path);
+        if (line.isEmpty()) {
             sendMessage("Никого!");
             return;
         }
 
         StringBuilder builder = new StringBuilder("Собственно я запомнил :\n");
-        for (String username : usernames) {
+        for (String username : line) {
             builder.append(username).append("\n");
         }
         builder.append("\n" + "Только им и буду дакать ❤️" + "\n");
         sendMessage(builder.toString());
     }
 
-    private void handleUsernamesClearCommand() {
-
-        if (FileUtil.removeAll(USERNAMES_CSV)) {
+    private void handleDataClearCommand(String path) {
+        if (dataService.deleteAllData(path)) {
             usernames.clear();
             sendMessage("Удачно удалил всех подписчиков!");
         } else {
@@ -205,14 +214,11 @@ public class DakaNekaBot extends TelegramLongPollingBot {
 
     }
 
-    private void handleUsernameDelete(String usernameToDelete) {
-        if (usernameToDelete == null || usernameToDelete.isEmpty()) {
-            sendMessage("Пустое имя пользователя!");
-            return;
-        }
+    private void handleDataDelete(String path, String usernameToDelete) {
+        if (checkUsernameEmpty(usernameToDelete)) return;
 
         if (usernames.remove(usernameToDelete)) {
-            if (FileUtil.removeLine(USERNAMES_CSV, usernameToDelete)) {
+            if (dataService.deleteData(path, usernameToDelete)) {
                 sendMessage("Удачно удалил своего подписчика!");
             } else {
                 sendMessage("Что-то пошло не так, зовите админа!!");
@@ -222,15 +228,24 @@ public class DakaNekaBot extends TelegramLongPollingBot {
         }
     }
 
+    private boolean checkUsernameEmpty(String usernameToDelete) {
+        if (usernameToDelete == null || usernameToDelete.isEmpty()) {
+            sendMessage("Пустое имя пользователя!");
+            return true;
+        }
+        return false;
+    }
+
     private void handleUsernameAddition(String usernameToSave) {
-        boolean userAlreadyPresent = FileUtil.containsLine(USERNAMES_CSV, usernameToSave);
+        if (checkUsernameEmpty(usernameToSave)) return;
+        boolean userAlreadyPresent = dataService.containsData(USERNAMES_CSV, usernameToSave);
 
         if (usernameToSave.isEmpty()) {
             sendMessage("Неверный юзернейм!");
         } else if (userAlreadyPresent) {
             sendMessage("Такой уже есть \uD83D\uDE0A!");
         } else {
-            if (FileUtil.writeLine(USERNAMES_CSV, usernameToSave)) {
+            if (dataService.saveData(USERNAMES_CSV, usernameToSave)) {
                 usernames.add(usernameToSave);
                 sendMessage("Удачно сохранил подписчика! \n Цьом его в пупок");
             } else {

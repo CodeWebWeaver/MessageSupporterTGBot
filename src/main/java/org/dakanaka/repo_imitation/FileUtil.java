@@ -1,11 +1,28 @@
-package org.example;
+package org.dakanaka.repo_imitation;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class FileUtil {
-    public static List<String> readLines(String filePath) {
+
+    public String readLine(String filePath, int index) {
+        String line = null;
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+            int counter = 0;
+            while ((line = reader.readLine()) != null) {
+                if (line != null && counter == index) {
+                    break;
+                }
+                counter++;
+            }
+        } catch (IOException exception) {
+            System.out.println("Cant read from : " + filePath);
+        }
+        return line;
+    }
+
+    public List<String> readLines(String filePath) {
         List<String> lines = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             String line;
@@ -18,7 +35,7 @@ public class FileUtil {
         return lines;
     }
 
-    public static boolean writeLines(String filePath, List<String> lines) {
+    public boolean writeLines(String filePath, List<String> lines) {
         try (FileWriter writer = new FileWriter(filePath)) {
             for (String line : lines) {
                 writer.append(line).append("\n");
@@ -30,7 +47,7 @@ public class FileUtil {
         }
     }
 
-    public static boolean containsLine(String filePath, String lineToFind) {
+    public boolean containsLine(String filePath, String lineToFind) {
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             String line;
             while ((line = reader.readLine()) != null) {
@@ -44,7 +61,7 @@ public class FileUtil {
         return false;
     }
 
-    public static boolean writeLine(String filePath, String line) {
+    public boolean writeLine(String filePath, String line) {
         try (FileWriter writer = new FileWriter(filePath, true)) {
             writer.append(line).append("\n");
             return true;
@@ -54,7 +71,7 @@ public class FileUtil {
         }
     }
 
-    public static boolean removeAll(String filePath) {
+    public boolean removeAll(String filePath) {
         try (FileWriter ignored = new FileWriter(filePath)) {
             // Не записываем никаких данных, файл будет перезаписан пустым содержимым
             return true;
@@ -64,7 +81,7 @@ public class FileUtil {
         }
     }
 
-    public static boolean removeLine(String filePath, String lineToRemove) {
+    public boolean removeLine(String filePath, String lineToRemove) {
         List<String> lines = new ArrayList<>();
         boolean lineFound = false;
 
@@ -90,7 +107,7 @@ public class FileUtil {
         }
     }
 
-    public static void createNewFileAtFolder(String folder, String filename) {
+    public void createNewFileAtFolder(String folder, String filename) {
         String currentDirectory = System.getProperty("user.dir");
 
         // Відносний шлях до папки "database" в поточному каталозі

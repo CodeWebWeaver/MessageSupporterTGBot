@@ -1,4 +1,4 @@
-package org.example;
+package org.dakanaka;
 
 public class ActionInfo {
     private final String action;

@@ -1,10 +1,10 @@
-package org.example;
+package org.dakanaka;
+
+import org.dakanaka.repo_imitation.FileUtil;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.example.FileUtil.createNewFileAtFolder;
 
 public class databaseFiller {
 
@@ -129,10 +129,15 @@ public class databaseFiller {
 
 
         String filename = "quotes.csv";
-        createNewFileAtFolder("database", filename);
+        String folderName = "database";
         String path = "database" + File.separator + filename;
-        FileUtil.writeLines(path, dataToSave);
 
-        List<String> strings = FileUtil.readLines(path);
+        FileUtil fileUtil = new FileUtil();
+
+        fileUtil.createNewFileAtFolder(folderName, filename);
+
+        fileUtil.writeLines(path, dataToSave);
+
+        List<String> strings = fileUtil.readLines(path);
     }
 }
