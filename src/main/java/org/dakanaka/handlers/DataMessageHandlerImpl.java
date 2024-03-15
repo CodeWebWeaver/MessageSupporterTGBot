@@ -121,7 +121,7 @@ public class DataMessageHandlerImpl implements MessageHandler {
             return;
         }
 
-        StringBuilder builder = new StringBuilder("Собственно я запомнил :\n");
+        StringBuilder builder = new StringBuilder("Собственно я запомнил :\n\n");
         for (String username : lines) {
             builder.append(username).append("\n");
         }
