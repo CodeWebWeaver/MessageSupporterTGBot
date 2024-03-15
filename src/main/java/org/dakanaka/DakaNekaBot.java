@@ -1,8 +1,14 @@
 package org.dakanaka;
 
 import io.github.cdimascio.dotenv.Dotenv;
-import org.dakanaka.service.DataService;
-import org.dakanaka.service.DataServiceImpl;
+import org.dakanaka.action.ActionInfo;
+import org.dakanaka.action.CommunicationActionInfo;
+import org.dakanaka.action.DataActionInfo;
+import org.dakanaka.enums.CommunicationAction;
+import org.dakanaka.enums.DataAction;
+import org.dakanaka.handlers.CommunicationMessageHandler;
+import org.dakanaka.handlers.DataMessageHandlerImpl;
+import org.dakanaka.handlers.MessageHandler;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.groupadministration.GetChatAdministrators;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -11,51 +17,76 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 public class DakaNekaBot extends TelegramLongPollingBot {
 
-    private static final String DATABASE_IMITATION_FOLDER_NAME = "database";
-    private static final String QUOTES_PATH = DATABASE_IMITATION_FOLDER_NAME + File.separator  + "quotes.csv";
-    private static final String FORTUNE_RESPONSE_PATH = DATABASE_IMITATION_FOLDER_NAME + File.separator  + "fortuneResponses.csv";
-    // Private data
-    private static final String USERNAMES_CSV = "C:/Users/Alex/Documents/usernames.csv";
-    private static final String DOMINANT_FEMALES_USERNAMES_CSV = "C:/Users/Alex/Documents/dominant_fem_usernames.csv";
     private static String BOT_TOKEN;
+    private final List<ChatMember> admins;
 
-    private final Random random = new Random();
-    private final DataService dataService;
-    Dotenv dotenv = Dotenv.configure().load();
     public DakaNekaBot() {
-        dataService = new DataServiceImpl();
-
-        BOT_TOKEN = dotenv.get("BOT_TOKEN");
-        usernames = new HashSet<>(dataService.getAllData(USERNAMES_CSV));
-        quotes = dataService.getAllData(QUOTES_PATH);
-        fortuneResponses = dataService.getAllData(FORTUNE_RESPONSE_PATH);
-
+        admins = getChatAdministrators();
+        BOT_TOKEN = Dotenv.configure().load().get("BOT_TOKEN");
         initializeActions();
     }
 
     private void initializeActions() {
-        actions.add(new ActionInfo("Дакалка удали @<username>", "Удаляет пользователя из списка подписчиков"));
-        actions.add(new ActionInfo("Дакалка добавь @<username>", "Добавляет пользователя в список подписчиков"));
-        actions.add(new ActionInfo("Дакалка запомни @<username>", "Добавляет пользователя в список подписчиков"));
-        actions.add(new ActionInfo("Дакалка кого ты...", "Выводит список запомненных подписчиков"));
-        actions.add(new ActionInfo("Дакалка как...", "Выводит список на что откликается"));
-        actions.add(new ActionInfo("Дакалка <вопрос>?", "Отвечает на вопрос абсолютно точно"));
-        actions.add(new ActionInfo("Да или нет", "Поддакивает или неожидано протестует"));
-        actions.add(new ActionInfo("Дакалка фразочку", "Выдает базу)"));
+        actions.add(new DataActionInfo("Дакалка удали @<username>",
+                "Удаляет пользователя из списка подписчиков",
+                List.of("^Дакалка удали @\\S+$"),
+                DataAction.REMOVE
+        ));
+        actions.add(new DataActionInfo("Дакалка добавь/запомни @<username>",
+                "Добавляет пользователя в список подписчиков",
+                List.of("^Дакалка добавь @\\S+$", "^Дакалка запомни @\\S+$"),
+                DataAction.ADD
+        ));
+        actions.add(new DataActionInfo("Дакалка кого ты...",
+                "Выводит список запомненных подписчиков",
+                List.of("^Дакалка кого ты.*"),
+                DataAction.GET_ALL
+        ));
+
+        actions.add(new CommunicationActionInfo("Дакалка как...",
+                "Выводит список на что откликается",
+                List.of("^Дакалка как.*", "^Дакалка инф.*"),
+                CommunicationAction.INFO
+        ));
+        actions.add(new CommunicationActionInfo("Дакалка <вопрос>?",
+                "Отвечает на вопрос абсолютно точно",
+                List.of("^Дакалка .+\\?$"),
+                CommunicationAction.FUTURE_RESPONSE
+        ));
+        actions.add(new CommunicationActionInfo(
+                "Да или нет",
+                "Поддакивает или неожидано протестует",
+                List.of("^Дакалка .+\\?$"),
+                CommunicationAction.YES_NO
+        ));
+        actions.add(new CommunicationActionInfo("Дакалка фразочку",
+                "Выдает базу)",
+                List.of("\\b[Дд]а\\s*(или)?\\s*[Нн]ет\\?\\b", "\\bНет\\?\\b", "\\bДа\\?\\b"),
+                CommunicationAction.QUOTE
+        ));
+
+        actions.add(new CommunicationActionInfo("Любит ли кто-то кого-то",
+                "Расказывает правду",
+                List.of(".*\\b(любит сашу|обожает сашу|обожнює сашу)\\b.*"),
+                CommunicationAction.YES_NO_LOVE
+        ));
+
+        actions.add(new CommunicationActionInfo("молодец или красава в ответ",
+                "Отвечает на похвалу",
+                List.of(".*\\b(молодец|красав)\\b.*"),
+                CommunicationAction.APPRECIATION_RESPONSE
+        ));
     }
 
     private String chatId;
     private String messageToSend;
     private final List<ActionInfo> actions = new ArrayList<>();
-    private final List<String> fortuneResponses;
-    private final List<String> quotes;
-    private final Set<String> usernames;
-    private String currentUsername;
 
     private boolean isSilent = false;
     //private int silentCounter = 0;
@@ -66,7 +97,7 @@ public class DakaNekaBot extends TelegramLongPollingBot {
         // Обработка полученного обновления
         chatId = update.getMessage().getChatId().toString();
 
-        currentUsername = update.getMessage().getFrom().getUserName();
+        String currentUsername = update.getMessage().getFrom().getUserName();
         String messageText = update.getMessage().getText();
 
         if (messageText == null || isSilent()) return;
@@ -76,58 +107,30 @@ public class DakaNekaBot extends TelegramLongPollingBot {
 
         String receivedCommand = lowerCaseWithUsername(messageText);
 
-        handleDakalkaCommand(receivedCommand);
-
         if (receivedCommand.contains("молчи")) {
             isSilent = true;
-            return;
         }
 
-        if ((receivedCommand.startsWith("дакалка") && receivedCommand.endsWith("?")) ) {
-            sendMessage(getRandomValueFromList(fortuneResponses));
-            return;
+        // Data handler
+        Optional<ActionInfo> anyDataAction = actions.stream()
+                .filter(action -> action.matchesPattern(receivedCommand) && action instanceof DataActionInfo)
+                .findAny();
+        if(anyDataAction.isPresent()) {
+            MessageHandler dataMessageHandler = new DataMessageHandlerImpl(admins, currentUsername, this);
+            dataMessageHandler.handleCommand(anyDataAction.get(), receivedCommand);
         }
 
-        if (receivedCommand.contains("дяя") || receivedCommand.contains("да или нет") || receivedCommand.contains("да?") || receivedCommand.contains("да!") || receivedCommand.contains("нет!") || receivedCommand.contains("нет? ") || receivedCommand.equals("нет") || receivedCommand.equals("да") && usernames.contains(currentUsername)) {
-
-            if (receivedCommand.contains("да?") && currentUsername.equals("Shantazh69") || currentUsername.equals("Helubimaya")) {
-                String[] response = {"Да-да, госпожа\uD83D\uDE18",
-                        "Дяяяяя, госпожа!❤️",
-                        "Дя, госпожа!",
-                        "Нет, госпожа \uD83E\uDD14",
-                        "Нет-Нет, госпожа\uD83D\uDE43",
-                        "Нет, госпожа!\uD83D\uDE07"};
-                sendMessage(response[random.nextInt(response.length)]);
-                return;
-            }
-
-            String[] response = {"Да-да\uD83D\uDE18", "Дяяяяя!❤️",
-                    "Дя!", "Да!", "Нет \uD83E\uDD14", "Нет-Нет\uD83D\uDE43",
-                    "Нет!\uD83D\uDE07"};
-            sendMessage(response[random.nextInt(response.length)]);
-            return;
-        }
-
-        if (receivedCommand.startsWith("дакалка фразочк")) {
-
-            sendMessage(getRandomValueFromList(quotes));
-            return;
-        }
-
-        if (receivedCommand.contains("любит сашу") || receivedCommand.contains("обожает сашу") || receivedCommand.contains("обожнює сашу")) {
-            String[] response = {"Да-да\uD83D\uDE18", "Дяяяяя!❤️",
-                    "Дя!", "Да!"};
-            sendMessage(response[random.nextInt(response.length)]);
-            return;
-        }
-
-        // Reply Logic
         Message replyToMessage = update.getMessage().getReplyToMessage();
-        if (replyToMessage != null && replyToMessage.getFrom() != null && replyToMessage.getFrom().getUserName().equals(getBotUsername())) {
-            if (messageText.toLowerCase().contains("молодец") || messageText.toLowerCase().contains("красав")) {
-                String[] response = {"Спасибо за похвалу! Это приятно слышать!\uD83D\uDE18",
-                        "Спасибки!❤️", "Хих)", "Ня!"};
-                sendMessage(response[random.nextInt(response.length)]);
+        // Communication handler
+        Optional<ActionInfo> anyCommunicationAction = actions.stream()
+                .filter(action -> action.matchesPattern(receivedCommand) && action instanceof CommunicationActionInfo)
+                .findAny();
+        if(anyCommunicationAction.isPresent()) {
+            MessageHandler communicationMessageHandler = new CommunicationMessageHandler(actions, currentUsername, this);
+            if (replyToMessage != null) {
+                communicationMessageHandler.handleCommand(anyCommunicationAction.get(), receivedCommand, replyToMessage);
+            } else {
+                communicationMessageHandler.handleCommand(anyCommunicationAction.get(), receivedCommand);
             }
         }
     }
@@ -143,121 +146,6 @@ public class DakaNekaBot extends TelegramLongPollingBot {
         }
     }
 
-
-    private void handleDakalkaCommand(String receivedCommand) {
-
-        if (receivedCommand.startsWith("дакалка как")) {
-            handleDakalkaInfoCommand();
-
-        } else if (receivedCommand.startsWith("дакалка кого ты")) {
-            handleGetAllDataCommand(USERNAMES_CSV);
-            return;
-        }
-
-        //if (!hasUpdatePermission()) return;
-
-        if (receivedCommand.startsWith("дакалка удали @")) {
-            String usernameToDelete = extractUsername(receivedCommand);
-            handleDataDelete(USERNAMES_CSV, usernameToDelete);
-
-        } else if (receivedCommand.contains("дакалка удали всех")) {
-            handleDataClearCommand(USERNAMES_CSV);
-
-        } else if (receivedCommand.startsWith("дакалка добавь @") || receivedCommand.startsWith("дакалка запомни @")) {
-            String usernameToDelete = extractUsername(receivedCommand);
-            handleUsernameAddition(usernameToDelete);
-        }
-    }
-
-    private boolean hasUpdatePermission() {
-        boolean isAdmin = getChatAdministrators().stream()
-                .anyMatch(i -> i.getUser().getUserName() != null && i.getUser().getUserName().equals(currentUsername));
-        boolean userInList = dataService.containsData(USERNAMES_CSV, currentUsername);
-
-        if (!userInList && !isAdmin) {
-            sendMessage("Ты не из нашей банды!");
-            return true;
-        }
-        return false;
-    }
-
-    private void handleDakalkaInfoCommand() {
-        StringBuilder builder = new StringBuilder("Я могу выполнить следующие действия:\n\n");
-        for (ActionInfo actionInfo : actions) {
-            builder.append(actionInfo.getAction()).append(" - ").append(actionInfo.getDescription()).append("\n");
-        }
-        sendMessage(builder.toString());
-    }
-
-    private void handleGetAllDataCommand(String path) {
-        List<String> line = dataService.getAllData(path);
-        if (line.isEmpty()) {
-            sendMessage("Никого!");
-            return;
-        }
-
-        StringBuilder builder = new StringBuilder("Собственно я запомнил :\n");
-        for (String username : line) {
-            builder.append(username).append("\n");
-        }
-        builder.append("\n" + "Только им и буду дакать ❤️" + "\n");
-        sendMessage(builder.toString());
-    }
-
-    private void handleDataClearCommand(String path) {
-        if (dataService.deleteAllData(path)) {
-            usernames.clear();
-            sendMessage("Удачно удалил всех подписчиков!");
-        } else {
-            sendMessage("Что-то пошло не так, зовите админа!!");
-        }
-
-    }
-
-    private void handleDataDelete(String path, String usernameToDelete) {
-        if (checkUsernameEmpty(usernameToDelete)) return;
-
-        if (usernames.remove(usernameToDelete)) {
-            if (dataService.deleteData(path, usernameToDelete)) {
-                sendMessage("Удачно удалил своего подписчика!");
-            } else {
-                sendMessage("Что-то пошло не так, зовите админа!!");
-            }
-        } else {
-            sendMessage("Такого пользователя нет!");
-        }
-    }
-
-    private boolean checkUsernameEmpty(String usernameToDelete) {
-        if (usernameToDelete == null || usernameToDelete.isEmpty()) {
-            sendMessage("Пустое имя пользователя!");
-            return true;
-        }
-        return false;
-    }
-
-    private void handleUsernameAddition(String usernameToSave) {
-        if (checkUsernameEmpty(usernameToSave)) return;
-        boolean userAlreadyPresent = dataService.containsData(USERNAMES_CSV, usernameToSave);
-
-        if (usernameToSave.isEmpty()) {
-            sendMessage("Неверный юзернейм!");
-        } else if (userAlreadyPresent) {
-            sendMessage("Такой уже есть \uD83D\uDE0A!");
-        } else {
-            if (dataService.saveData(USERNAMES_CSV, usernameToSave)) {
-                usernames.add(usernameToSave);
-                sendMessage("Удачно сохранил подписчика! \n Цьом его в пупок");
-            } else {
-                sendMessage("Что-то пошло не так, зовите админа!!");
-            }
-        }
-    }
-
-    private String getRandomValueFromList(List<String> list) {
-        return list.get(random.nextInt(list.size()));
-    }
-
     private boolean isSilent() {
         if (isSilent) {
             isSilent = false;
@@ -266,7 +154,7 @@ public class DakaNekaBot extends TelegramLongPollingBot {
         return false;
     }
 
-    private void sendMessage(String text) {
+    public void sendMessage(String text) {
         System.out.println("Message to send: " + messageToSend);
 
         SendMessage sendMessage = new SendMessage();
@@ -277,15 +165,6 @@ public class DakaNekaBot extends TelegramLongPollingBot {
             messageToSend = null;
         } catch (TelegramApiException e) {
             throw new RuntimeException(e);
-        }
-    }
-
-    private String extractUsername(String receivedCommand) {
-        String[] parts = receivedCommand.split("@");
-        if (parts.length >= 2) {
-            return parts[1].trim();
-        } else {
-            return null;
         }
     }
 
