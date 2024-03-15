@@ -28,9 +28,11 @@ public abstract class ActionInfo {
 
     // Абстрактный метод для проверки подходит ли строка под паттерн действия
     public boolean matchesPattern(String input) {
+        Pattern compile = Pattern.compile(getPatterns().get(0), Pattern.CASE_INSENSITIVE);
+        boolean b = compile.matcher(input).find();
         return patterns.stream()
-                .anyMatch(i -> Pattern.compile(i, Pattern.CASE_INSENSITIVE)
+                .anyMatch(pattern -> Pattern.compile(pattern, Pattern.CASE_INSENSITIVE)
                         .matcher(input)
-                        .matches());
+                        .find());
     }
 }

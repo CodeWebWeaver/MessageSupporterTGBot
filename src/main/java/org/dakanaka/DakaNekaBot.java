@@ -24,10 +24,8 @@ import java.util.Optional;
 public class DakaNekaBot extends TelegramLongPollingBot {
 
     private static String BOT_TOKEN;
-    private final List<ChatMember> admins;
 
     public DakaNekaBot() {
-        admins = getChatAdministrators();
         BOT_TOKEN = Dotenv.configure().load().get("BOT_TOKEN");
         initializeActions();
     }
@@ -56,7 +54,7 @@ public class DakaNekaBot extends TelegramLongPollingBot {
         ));
         actions.add(new CommunicationActionInfo("Дакалка <вопрос>?",
                 "Отвечает на вопрос абсолютно точно",
-                List.of("^Дакалка .+\\?$"),
+                List.of("^Дакалка .+\\?$", "^Дакалка .*\\?$"),
                 CommunicationAction.FUTURE_RESPONSE
         ));
         actions.add(new CommunicationActionInfo(
@@ -96,6 +94,7 @@ public class DakaNekaBot extends TelegramLongPollingBot {
     public void onUpdateReceived(Update update) {
         // Обработка полученного обновления
         chatId = update.getMessage().getChatId().toString();
+        List<ChatMember> admins = getChatAdministrators();
 
         String currentUsername = update.getMessage().getFrom().getUserName();
         String messageText = update.getMessage().getText();
@@ -105,32 +104,30 @@ public class DakaNekaBot extends TelegramLongPollingBot {
         //CHAT LOG
         System.out.println(currentUsername + ":" + messageText);
 
-        String receivedCommand = lowerCaseWithUsername(messageText);
-
-        if (receivedCommand.contains("молчи")) {
+        if (messageText.contains("молчи")) {
             isSilent = true;
         }
 
         // Data handler
         Optional<ActionInfo> anyDataAction = actions.stream()
-                .filter(action -> action.matchesPattern(receivedCommand) && action instanceof DataActionInfo)
+                .filter(action -> action.matchesPattern(messageText) && action instanceof DataActionInfo)
                 .findAny();
         if(anyDataAction.isPresent()) {
             MessageHandler dataMessageHandler = new DataMessageHandlerImpl(admins, currentUsername, this);
-            dataMessageHandler.handleCommand(anyDataAction.get(), receivedCommand);
+            dataMessageHandler.handleCommand(anyDataAction.get(), messageText);
         }
 
         Message replyToMessage = update.getMessage().getReplyToMessage();
         // Communication handler
         Optional<ActionInfo> anyCommunicationAction = actions.stream()
-                .filter(action -> action.matchesPattern(receivedCommand) && action instanceof CommunicationActionInfo)
+                .filter(action -> action.matchesPattern(messageText) && action instanceof CommunicationActionInfo)
                 .findAny();
         if(anyCommunicationAction.isPresent()) {
             MessageHandler communicationMessageHandler = new CommunicationMessageHandler(actions, currentUsername, this);
             if (replyToMessage != null) {
-                communicationMessageHandler.handleCommand(anyCommunicationAction.get(), receivedCommand, replyToMessage);
+                communicationMessageHandler.handleCommand(anyCommunicationAction.get(), messageText, replyToMessage);
             } else {
-                communicationMessageHandler.handleCommand(anyCommunicationAction.get(), receivedCommand);
+                communicationMessageHandler.handleCommand(anyCommunicationAction.get(), messageText);
             }
         }
     }
