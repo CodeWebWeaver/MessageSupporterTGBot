@@ -3,12 +3,29 @@ package org.dakanaka;
 import org.dakanaka.repo_imitation.FileUtil;
 
 import java.io.File;
+/* https://javarush.com/groups/posts/2275-files-path
+Десь читав, що клас File та його інпут/аутпут стріми застарілі і краще
+юзати java.nio.Files. Сильно не розбирався в ньому ще, але виглядає цікаво, можеш глянути:)
+*/
 import java.util.ArrayList;
 import java.util.List;
 
-public class databaseFiller {
+public class DatabaseFiller {   
 
     public static void main(String[] args) {
+
+        /*
+        final List<String> dataToSave = new ArrayList<>(){{
+            add("В ногах - болото,\n" +
+                    "А в душе - комары и мухи.\n" +
+                    "Наталья Коровина, г. Выборг.");
+            add("Лучше быть запасливым, чем запасным.");
+            add("Мне яйца в плечах не жмут.");
+        }};
+        Можна ще так, щоб лишній раз не писати.
+        Я так розумію ти тестив щось, тільки нащо так багато))
+        */
+        
         final List<String> dataToSave = new ArrayList<>();
         dataToSave.add("В ногах - болото,\n" +
                 "А в душе - комары и мухи.\n" +

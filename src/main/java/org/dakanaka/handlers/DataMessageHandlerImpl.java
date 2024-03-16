@@ -58,6 +58,7 @@ public class DataMessageHandlerImpl implements MessageHandler {
                 break;
             case REMOVE_ALL:
                 handleDataClearCommand(USERNAMES_CSV);
+                break;
             default:
         }
     }
