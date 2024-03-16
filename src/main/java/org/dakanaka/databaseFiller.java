@@ -10,8 +10,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-// https://www.magnumblog.space/java/translating-java-code-conventions#naming_conventions
-public class DatabaseFiller {    // UpperCamelCase
+public class DatabaseFiller {   
 
     public static void main(String[] args) {
 
