@@ -14,7 +14,7 @@ public class REgex {
                 "Дяя*$"
         );
 
-        String input = "откуда?";
+        String input = "там, да?";
 
         boolean anyMatch = patterns.stream()
                 .anyMatch(pattern -> {
