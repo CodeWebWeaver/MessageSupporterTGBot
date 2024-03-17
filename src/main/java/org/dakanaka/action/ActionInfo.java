@@ -34,7 +34,7 @@ public abstract class ActionInfo {
                 return isPresent;
             }
         }*/
-        return patterns.stream()
+         return patterns.stream()
                 .anyMatch(pattern -> {
                     Pattern compile = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
                     return compile.matcher(input).find();
