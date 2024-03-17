@@ -36,7 +36,7 @@ public class FileUtil {
     }
 
     public boolean writeLines(String filePath, List<String> lines) {
-        try (FileWriter writer = new FileWriter(filePath)) {
+        try (FileWriter writer = new FileWriter(filePath,  true)) {
             for (String line : lines) {
                 writer.append(line).append("\n");
             }
