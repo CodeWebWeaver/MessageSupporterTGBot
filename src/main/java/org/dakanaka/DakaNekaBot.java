@@ -86,10 +86,10 @@ public class DakaNekaBot extends TelegramLongPollingBot {
         ));
         actions.add(new CommunicationActionInfo("Дакалка фразочку",
                 "Выдает базу)",
-                List.of("^Дакалка фразочку.*",
-                        "^Дакалка фраз.*",
-                        "^Дакалка выдай базу.*",
-                        "^Дакалка базу.*"),
+                List.of("^[Дд]акалка фразочку.*",
+                        "^[Дд]акалка фраз.*",
+                        "^[Дд]акалка выдай базу.*",
+                        "^[Дд]акалка базу.*"),
                 CommunicationAction.QUOTE
         ));
 
@@ -127,7 +127,6 @@ public class DakaNekaBot extends TelegramLongPollingBot {
     }
 
     private String chatId;
-    private String messageToSend;
     private final List<ActionInfo> actions = new ArrayList<>();
 
     private boolean isSilent = false;
@@ -185,7 +184,7 @@ public class DakaNekaBot extends TelegramLongPollingBot {
     }
 
     public void sendMessage(String text) {
-        System.out.println("Message to send: " + messageToSend);
+        System.out.println("Message to send: " + text);
 
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(chatId);
@@ -193,7 +192,6 @@ public class DakaNekaBot extends TelegramLongPollingBot {
 
         try {
             this.execute(sendMessage);
-            messageToSend = null;
         } catch (TelegramApiException e) {
             throw new RuntimeException(e);
         }
